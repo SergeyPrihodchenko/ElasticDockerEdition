@@ -1,0 +1,42 @@
+{
+    "settings": {
+        "index": {
+            "analysis": {
+                "analyzer": {
+                    "custom_analyzer": {
+                        "type": "custom",
+                        "tokenizer": "standard",
+                        "filter": [
+                            "lowercase",
+                            "custom_edge_ngram"
+                        ]
+                    }
+                },
+                "filter": {
+                    "custom_edge_ngram": {
+                        "type": "edge_ngram",
+                        "min_gram": 2,
+                        "max_gram": 30
+                    }
+                }
+            }
+        }
+    },
+    "mappings": {
+        "properties": {
+            "pagetitle": {
+                "type": "text",
+                "analyzer": "custom_analyzer",
+                "search_analyzer": "standard"
+            },
+            "longtitle": {
+                "type": "text",
+                "analyzer": "custom_analyzer",
+                "search_analyzer": "standard"
+            },
+            "uri": {
+                "type": "text"
+            }
+        }
+    }
+}

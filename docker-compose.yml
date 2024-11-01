@@ -1,0 +1,63 @@
+volumes:
+  kernel-search-elastic: {}
+
+services:
+  setup_elk:
+    build:
+      context: ELK/setup/
+      args:
+        ELASTIC_VERSION: ${ELASTIC_VERSION}
+    init: true
+    volumes:
+      - ./ELK/setup:/state:Z
+    environment:
+      ELASTICSEARCH_HOST: kernel-search-elasticsearch
+      ELASTIC_PASSWORD: ${ELASTICSEARCH_PASSWORD}
+      KIBANA_SYSTEM_PASSWORD: ${KIBANA_PASSWORD}
+    networks:
+      - LAMP
+    depends_on:
+      - elasticsearch
+
+  elasticsearch:
+    container_name: kernel-search-elasticsearch
+    image: elasticsearch:${ELASTIC_VERSION}
+    init: true
+    environment:
+      - node.name=catalog_es1
+      - cluster.name=es-docker-cluster
+      - bootstrap.memory_lock=true
+      - "discovery.type=single-node"
+      - xpack.security.enabled=true
+      - ELASTIC_PASSWORD=${ELASTICSEARCH_PASSWORD}
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+      - http.max_initial_line_length=10kb
+      - action.destructive_requires_name=false
+    volumes:
+      - kernel-search-elastic:/usr/share/elasticsearch
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - '9200:9200'
+    networks:
+      - 'LAMP'
+
+  kibana:
+    container_name: kernel-search-kibana
+    image: kibana:${ELASTIC_VERSION}
+    depends_on:
+      - elasticsearch
+    environment:
+      - ELASTICSEARCH_HOSTS=http://kernel-search-elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=kibana_system
+      - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD}
+    networks:
+      - 'LAMP'
+    ports:
+      - "5601:5601"
+
+networks:
+  LAMP:
+    name: LAMP
